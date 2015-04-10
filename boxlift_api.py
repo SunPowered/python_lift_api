@@ -40,7 +40,8 @@ class Command(object):
 class BoxLift(object):
     HOST = 'http://codelift.org'
 
-    def __init__(self, bot_name, plan, email, registration_id, event_name='', sandbox_mode=False):
+    def __init__(self, bot_name, plan, email, registration_id, event_name='', 
+                 sandbox_mode=False, verbose=False):
         """An object that provides an interface to the Lift System.
 
         :param bot_name:
@@ -71,13 +72,18 @@ class BoxLift(object):
             you to step through code slowly.
         :type sandbox_mode:
             `bool`
+        :param verbose:
+            print all request data and responses to the console
+        :type verbose:
+            `bool`
         """
         self.email = email
+        self.verbose = verbose
         initialization_data = {
             'username': bot_name,
             'email': email,
             'plan': plan,
-            'event_name' : event_name,
+            'event_name': event_name,
             'event_id': registration_id,
             'sandbox': sandbox_mode,
         }
@@ -131,15 +137,25 @@ class BoxLift(object):
     def url_root(cls):
         return cls.HOST + "/v1/buildings"
 
+    def _body_data(self):
+        return {'token': self.token,
+                'commands': {}}
+
+    def get_building_state(self):
+        return self._post(self.building_url, self._body_data())
+
     def _post(self, url, data):
         """wrapper to encode/decode our data and the return value"""
+        if self.verbose:
+            print url + ": " + str(data)
         req = urllib2.Request(url, json.dumps(data).encode('utf-8'))
         response = urllib2.urlopen(req)
         res = response.read()
         try:
-            return json.loads(res)
+            resp = json.loads(res)
+            if self.verbose:
+                print resp
+            return resp
         except ValueError:
             # probably empty response so no JSON to decode
             return res
-
-
