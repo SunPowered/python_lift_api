@@ -1,0 +1,5 @@
+# Py files
+*.pyc
+
+# Config File
+config.py
