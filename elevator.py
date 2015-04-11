@@ -22,6 +22,10 @@ class Elevator(object):
             self.requests.append((floor, direction))
 
     def remove_request(self, floor, direction):
+        """ Remove a request """
         if self.is_request_assigned(floor, direction):
             self.requests.remove((floor, direction))
 
+    def is_button_pressed(self, btn):
+        """ Simlpe check whether a button press is present """
+        return btn in self.button_pressed
