@@ -63,3 +63,9 @@ class Controller(object):
         else:
             # Find shortest distance
             return sorted(els, key=lambda x: x[1])[0][0]
+
+    def print_status(self):
+        """ Print the current elevator status """
+        print """ --- Status --- """
+        for el in self.elevators:
+            print el
