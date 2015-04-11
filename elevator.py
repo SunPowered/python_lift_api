@@ -43,6 +43,14 @@ class Elevator(object):
         floors.sort(reverse=do_reverse)
         return floors
 
+    def has_requests(self):
+        """ Simple check whether requests are assigned """
+        return len(self.requests) > 0
+
+    def has_buttons(self):
+        """ Simple check whether buttons are pressed """
+        return len(self.button_pressed) > 0
+
     def is_button_pressed(self, btn):
         """ Simlpe check whether a button press is present """
         return btn in self.button_pressed

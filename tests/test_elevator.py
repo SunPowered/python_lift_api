@@ -12,16 +12,20 @@ class ElevatorTest(unittest.TestCase):
 
     def test_request_crud(self):
         self.assertFalse(self.el.is_request_assigned(1, -1))
+        self.assertFalse(self.el.has_requests())
         self.el.assign_request(1, -1)
         self.assertTrue(self.el.is_request_assigned(1, -1))
+        self.assertTrue(self.el.has_requests())
         self.el.remove_request(1, -1)
         self.assertFalse(self.el.is_request_assigned(1, -1))
 
     def test_button_pressed(self):
         self.assertFalse(self.el.is_button_pressed(2))
+        self.assertFalse(self.el.has_buttons())
         self.el.button_pressed = [2, 5, 8]
         self.assertTrue(self.el.is_button_pressed(2))
         self.assertFalse(self.el.is_button_pressed(3))
+        self.assertTrue(self.el.has_buttons())
 
     def test_requests_along_direction(self):
         self.assertRaises(ValueError, self.el.requests_along_direction, -2)
