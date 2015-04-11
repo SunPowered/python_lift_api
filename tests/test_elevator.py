@@ -8,6 +8,9 @@ from elevator import Elevator
 class ElevatorTest(unittest.TestCase):
 
     def setUp(self):
+        self.reset_elevator()
+
+    def reset_elevator(self):
         self.el = Elevator(0)
 
     def test_request_crud(self):
@@ -47,6 +50,14 @@ class ElevatorTest(unittest.TestCase):
         self.assertEqual(self.el.direction_to(5), 1)
         self.assertEqual(self.el.direction_to(0), -1)
 
+    def test_closest_req(self):
+        self.el.floor = 3
+        self.el.requests = [(0, 1), (2, -1), (6, -1)]
+        self.assertEqual(self.el.closest_request(), -1)
+
+        self.el.requests = [(5, -1), (0, 1), (9, -1)]
+        self.assertEqual(self.el.closest_request(), 1)
+
     def test_update_state(self):
         bad_state = {'nid': 0}
         self.assertRaises(TypeError, self.el.update_state, bad_state)
@@ -57,6 +68,35 @@ class ElevatorTest(unittest.TestCase):
         self.el.update_state(good_state)
         self.assertEqual(self.el.floor, 1)
         self.assertEqual(self.el.button_pressed, [3, 5])
+
+    def check_command(self, speed=None, direction=None):
+        command = self.el.get_command()
+        self.assertIsNotNone(command)
+        if speed is not None:
+            self.assertEqual(command.speed, speed)
+        if direction is not None:
+            self.assertEqual(command.direction, direction)
+
+    def test_commands(self):
+        # If no requests at home, do nothing
+        self.assertIsNone(self.el.get_command())
+
+        # If no requests, and not at home, then send down
+        self.el.floor = 3
+        self.check_command(speed=1, direction=-1)
+
+        self.el.direction = 1
+        self.el.speed = 1
+        self.el.button_pressed = [3, 4]
+        self.check_command(speed=0)
+
+        self.el.speed = 0
+        self.el.button_pressed = [4]
+        self.check_command(speed=1, direction=1)
+
+        self.el.button_pressed = []
+        self.el.requests = [(5, 1)]
+        self.check_command(speed=1, direction=1)
 
 if __name__ == '__main__':
     unittest.main()
