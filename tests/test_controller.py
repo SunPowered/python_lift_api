@@ -77,6 +77,12 @@ class ControllerTest(unittest.TestCase):
         self.configure_elevator(1, floor=3, btns=[1, 2], reqs=[(3, -1), (0, 1)])
         self.assertEqual(self.controller.find_elevator_by_req_metric(req), 0)
 
+    def test_assign_request(self):
+        req = (5, 1)
+        self.assertFalse(self.controller.is_request_assigned(req))
+        self.controller.assign_request(req)
+        self.assertTrue(self.controller.is_request_assigned(req))
+
     def test_update(self):
 
         resp = {u'status': u'in_progress',

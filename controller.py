@@ -21,6 +21,13 @@ class Controller(object):
         for idx in range(self.plan.n_els):
             self.elevators.append(Elevator(idx))
 
+    def is_request_assigned(self, req):
+        """ Check all elevators whether the request is assigned """
+        for el in self.elevators:
+            if el.is_request_assigned(*req):
+                return True
+        return False
+
     def assign_request(self, req):
         """ Assign a request to one of the current elevators.  There are some rules
         to abide by when selecting what elevator to assign the request to:
@@ -29,17 +36,20 @@ class Controller(object):
         -  If not directly on the way, try to balance the request load between elevators
         """
 
+        if self.is_request_assigned(req):
+            return
+
         # Check whether request is on the way to another elevator
         elevator = self.find_elevator_by_req_otw(req)
 
         if elevator is not None:
             # Assign it to this elevator
-            self.elevators[elevator].assign_request(req)
+            self.elevators[elevator].assign_request(*req)
             return
 
         # Find the minimum of distance*n_reqs**2 for the elevator stack
         elevator = self.find_elevator_by_req_metric(req)
-        self.elevators[elevator].assign_request(req)
+        self.elevators[elevator].assign_request(*req)
 
     def find_elevator_by_req_otw(self, req):
         """  Check and see whether the request is already on the way of
@@ -104,6 +114,8 @@ class Controller(object):
         reqs = resp.get("requests", None)
         if reqs is not None:
             for req in reqs:
+                # wrap request
+                req = (req['floor'], req['direction'])
                 self.assign_request(req)
 
     def get_commands(self):
