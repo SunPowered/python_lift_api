@@ -12,6 +12,7 @@ class Elevator(object):
         self.button_pressed = []
         self.speed = 0
         self.direction = 0
+        self.floor = 0
 
     def is_request_assigned(self, floor, direction):
         return (floor, direction) in self.requests
@@ -45,3 +46,12 @@ class Elevator(object):
     def is_button_pressed(self, btn):
         """ Simlpe check whether a button press is present """
         return btn in self.button_pressed
+
+    def distance_to(self, floor):
+        """ Find the distance from the current position to the current floor """
+        return floor - self.floor
+
+    def direction_to(self, floor):
+        """ Return the direction to a floor from current location """
+        dist = self.distance_to(floor)
+        return dist / abs(dist)

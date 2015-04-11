@@ -35,5 +35,13 @@ class ElevatorTest(unittest.TestCase):
         floors = self.el.requests_along_direction(1)
         self.assertEqual(floors, [1, 7])
 
+    def test_distance_direction_to(self):
+        self.el.floor = 2
+        self.assertEqual(self.el.distance_to(3), 1)
+        self.assertEqual(self.el.distance_to(0), -2)
+
+        self.assertEqual(self.el.direction_to(5), 1)
+        self.assertEqual(self.el.direction_to(0), -1)
+
 if __name__ == '__main__':
     unittest.main()
