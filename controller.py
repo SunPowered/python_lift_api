@@ -17,6 +17,49 @@ class Controller(object):
         self.init_elevators()
 
     def init_elevators(self):
+        self.elevators = []
         for idx in range(self.plan.n_els):
             self.elevators.append(Elevator(idx))
 
+    def assign_request(self, req):
+        """ Assign a request to one of the current elevators.  There are some rules
+        to abide by when selecting what elevator to assign the request to:
+
+        -  Find the closest elevator who is already on its way to the request
+        -  If not directly on the way, try to balance the request load between elevators
+        """
+
+        # Check whether request is on the way to another elevator
+        elevator = self.find_elevator_by_req_otw(req)
+
+        if elevator is not None:
+            # Assign it to this elevator
+            self.elevators[elevator].assign_request(req)
+            return
+
+        # Find the minimum of distance*n_reqs**2 for the elevator stack
+        elevator = self.find_elevator_by_req_metric(req)
+        self.elevators[elevator].assign_request(req)
+
+    def find_elevator_by_req_otw(self, req):
+        """  Check and see whether the request is already on the way of
+             an elevator.  If multiple yesses, choose closest one.  If none,
+             return None.
+        """
+        req_floor, requests_dir = req
+        els = []
+        for el in self.elevators:
+            if not el.has_buttons():
+                continue
+            if el.direction_to(req_floor) == el.direction:
+                distance = el.distance_to(req_floor)
+                els.append((el.id_, distance))
+
+        el_len = len(els)
+        if el_len == 0:
+            return None
+        elif el_len == 1:
+            return els[0][0]
+        else:
+            # Find shortest distance
+            return sorted(els, key=lambda x: x[1])[0][0]
