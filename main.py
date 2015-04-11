@@ -42,6 +42,8 @@ def main(options):
     if plan is None:
         raise TypeError("No plan exists for name: {}".format(options.plan))
 
+    print_simulation_header(plan)
+
     controller = Controller(plan)
     api = BoxLift(cfg.username, plan.name, cfg.email, cfg.registration_id,
                   event_name=PYCON2015_EVENT_NAME, sandbox_mode=options.sandbox,
@@ -52,7 +54,7 @@ def main(options):
     commands = controller.get_commands()
     # The loop
     loop_counter = 0
-    print_simulation_header(plan)
+
     while 1:
         loop_counter += 1
         print_loop_counter(loop_counter, plan.n_iters)
