@@ -15,10 +15,9 @@ class Elevator(object):
         self.floor = 0
 
     def __str__(self):
-        return "Elevator {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.speed,
-                                                                      self.direction, self.buttons_pressed,
-                                                                      self.requests)
-
+        return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
+                                                                            self.speed, self.direction,
+                                                                            self.button_pressed, self.requests)
     def is_request_assigned(self, floor, direction):
         return (floor, direction) in self.requests
 
