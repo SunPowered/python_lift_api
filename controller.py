@@ -64,6 +64,27 @@ class Controller(object):
             # Find shortest distance
             return sorted(els, key=lambda x: x[1])[0][0]
 
+    def find_elevator_by_req_metric(self, req):
+        """ Get the minimum of a request metric to determine which
+            elevator to select
+        """
+        metrics = []
+        for el in self.elevators:
+            metrics.append((el.id_, self.distance_metric(el, req)))
+
+        # Sort and get the minimum value
+        metrics.sort(key=lambda x: x[1])
+        return metrics[0][0]
+
+    def distance_metric(self, el, req):
+        """ Use a metric to gauge the best elevator to select """
+        n_reqs = len(el.requests)
+        n_btns = len(el.button_pressed)
+
+        distance = abs(el.distance_to(req[0]))
+
+        return distance * (n_reqs + n_btns) ** 2
+
     def print_status(self):
         """ Print the current elevator status """
         print """ --- Status --- """

@@ -65,14 +65,26 @@ class ControllerTest(unittest.TestCase):
         self.configure_elevator(1, floor=3, speed=1, direction=1, btns=[6, 5])
         self.assertEqual(self.controller.find_elevator_by_req_otw(req), 1)
 
+    def test_find_el_metric(self):
+        req = (5, 1)
+
+        self.configure_elevator(0, floor=3)
+        self.configure_elevator(1, floor=1)
+        self.assertEqual(self.controller.find_elevator_by_req_metric(req), 0)
+
+        self.controller.init_elevators()
+        self.configure_elevator(0, floor=9)
+        self.configure_elevator(1, floor=3, btns=[1, 2], reqs=[(3, -1), (0, 1)])
+        self.assertEqual(self.controller.find_elevator_by_req_metric(req), 0)
+
     def test_update(self):
 
-        resp = {u'status': u'in_progress', 
-                u'elevators': [{u'id': 0, u'floor': 3}, 
-                               {u'id': 1, u'floor': 2}], 
-                u'token': u'Test Token', 
-                u'floors': 10, 
-                u'requests': [], 
+        resp = {u'status': u'in_progress',
+                u'elevators': [{u'id': 0, u'floor': 3},
+                               {u'id': 1, u'floor': 2}],
+                u'token': u'Test Token',
+                u'floors': 10,
+                u'requests': [],
                 u'message': u'Building In Progress'}
 
         self.controller.update(resp)
