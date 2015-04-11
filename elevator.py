@@ -1,10 +1,13 @@
 """ elevator.py  - The elevator object """
 from boxlift_api import Command
 
+NO_REQUEST_STAY_PUT = True
+
+
 class Elevator(object):
     """ An object to store current states of various elevators and assigned requests. """
 
-    def __init__(self, id_):
+    def __init__(self, id_, n_floors):
         """ Main constructor. """
 
         self.id_ = id_
@@ -13,7 +16,7 @@ class Elevator(object):
         self.speed = 0
         self.direction = 0
         self.floor = 0
-        self.wait = False
+        self.n_floors = n_floors
 
     def __str__(self):
         return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
@@ -38,7 +41,6 @@ class Elevator(object):
         if self.is_request_assigned(floor, direction=None):
             req = self.get_request_by_floor(floor)
             self.requests.remove(req)
-            self.wait = True
 
     def get_request_by_floor(self, floor):
         for req in self.requests:
@@ -121,32 +123,47 @@ class Elevator(object):
     def get_command(self):
         """ Determines what command to issue for itself """
 
-        # If no requests and not at home, send home
-        if self.floor != 0 and not self.has_any_requests():
-            return self.command(speed=1, direction=-1)
+        req = None
+        if self.is_request_assigned(self.floor):
+            req = self.get_request_by_floor(self.floor)
 
-        # If no requests, and at home, then do nothing
-        if self.floor == 0 and not self.has_any_requests():
-            return None
+        # If no requests, then stay put
+        if NO_REQUEST_STAY_PUT:
+            if not self.has_any_requests():
+                return None
+        else:
+            # If no requests and not at home, send home
+            if self.floor != 0 and not self.has_any_requests():
+                return self.command(speed=1, direction=-1)
 
-        # If waiting, then return None
-        if self.wait:
-            self.wait = False
-
-            return None
-
-        # If current floor is pressed, then stop
-        if self.speed and self.is_button_pressed(self.floor):
-            return self.command(speed=0, direction=self.direction)
+            # If no requests, and at home, then do nothing
+            if self.floor == 0 and not self.has_any_requests():
+                return None
 
         # If current floor is requested, then stop and set proper direction
-        if self.speed and self.is_request_assigned(self.floor):
-            req = self.get_request_by_floor(self.floor)
-            self.remove_request(self.floor)
-            return self.command(speed=0, direction=req[1])
+        if req is not None:
+            if self.floor in [0, self.n_floors]:
+                self.remove_request(self.floor)
+                return self.command(speed=0, direction=req[1])
+            elif (req[1] != self.direction) and self.has_buttons():
+                return self.command(speed=0, direction=self.direction)
+            else:
+                self.remove_request(self.floor)
+                return self.command(speed=0, direction=req[1])
+
+        # If current floor is pressed, then stop
+        if self.is_button_pressed(self.floor):
+            if req is not None:
+                return self.command(speed=0, direction=req[1])
+            return self.command(speed=0, direction=self.direction)
+        # if self.speed and self.is_button_pressed(self.floor):
+        #     if self.is_request_assigned(self.floor):
+        #         req = self.get_request_by_floor(self.floor)
+        #         return self.command(speed=0, direction=req[1])
+        #     return self.command(speed=0, direction=self.direction)
 
         # If stopped, then go towards next button
-        if not self.speed and self.has_buttons():
+        if not self.speed and self.has_buttons() and req is None:
             return self.command(speed=1, direction=self.direction_to(self.button_pressed[0]))
 
         # If stopped, and no buttons, go to nearest request

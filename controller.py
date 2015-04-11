@@ -19,7 +19,7 @@ class Controller(object):
     def init_elevators(self):
         self.elevators = []
         for idx in range(self.plan.n_els):
-            self.elevators.append(Elevator(idx))
+            self.elevators.append(Elevator(idx, self.plan.n_floors))
 
     def is_request_assigned(self, req):
         """ Check all elevators whether the request is assigned """
