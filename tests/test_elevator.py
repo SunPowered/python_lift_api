@@ -47,5 +47,16 @@ class ElevatorTest(unittest.TestCase):
         self.assertEqual(self.el.direction_to(5), 1)
         self.assertEqual(self.el.direction_to(0), -1)
 
+    def test_update_state(self):
+        bad_state = {'nid': 0}
+        self.assertRaises(TypeError, self.el.update_state, bad_state)
+        bad_state = {'id': 1}
+        self.assertRaises(ValueError, self.el.update_state, bad_state)
+
+        good_state = {'id': 0, 'floor': 1, 'buttons_pressed': [3, 5]}
+        self.el.update_state(good_state)
+        self.assertEqual(self.el.floor, 1)
+        self.assertEqual(self.el.button_pressed, [3, 5])
+
 if __name__ == '__main__':
     unittest.main()

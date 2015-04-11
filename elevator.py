@@ -7,7 +7,7 @@ class Elevator(object):
     def __init__(self, id_):
         """ Main constructor. """
 
-        self._id = id_
+        self.id_ = id_
         self.requests = []
         self.button_pressed = []
         self.speed = 0
@@ -63,3 +63,18 @@ class Elevator(object):
         """ Return the direction to a floor from current location """
         dist = self.distance_to(floor)
         return dist / abs(dist)
+
+    def update_state(self, state):
+        """ A quick method to update the current state of things based on the REST values """
+        id_ = state.get('id', None)
+
+        if id_ is None:
+            raise TypeError("Undefined state structure, no id parameter")
+        if id_ != self.id_:
+            raise ValueError("Incorrect id parameter, try a different object")
+
+        button_pressed = state.get('buttons_pressed', [])
+        self.button_pressed = button_pressed
+
+        floor = state.get('floor', 0)
+        self.floor = floor
