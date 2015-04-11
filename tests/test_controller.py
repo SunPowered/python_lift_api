@@ -65,6 +65,18 @@ class ControllerTest(unittest.TestCase):
         self.configure_elevator(1, floor=3, speed=1, direction=1, btns=[6, 5])
         self.assertEqual(self.controller.find_elevator_by_req_otw(req), 1)
 
+    def test_update(self):
+
+        resp = {u'status': u'in_progress', 
+                u'elevators': [{u'id': 0, u'floor': 3}, 
+                               {u'id': 1, u'floor': 2}], 
+                u'token': u'Test Token', 
+                u'floors': 10, 
+                u'requests': [], 
+                u'message': u'Building In Progress'}
+
+        self.controller.update(resp)
+        self.assertEqual(self.controller.elevators[0].floor, 3)
 
 if __name__ == '__main__':
     unittest.main()

@@ -77,7 +77,7 @@ class Controller(object):
         els = resp.get("elevators", None)
         if els is not None:
             for el in els:
-                self.elevators[el.id_].update_state(el)
+                self.elevators[el.get('id')].update_state(el)
 
         # Assign all requests
         reqs = resp.get("requests", None)
