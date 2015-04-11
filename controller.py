@@ -69,3 +69,18 @@ class Controller(object):
         print """ --- Status --- """
         for el in self.elevators:
             print el
+
+    def update(self, resp):
+        """ Update the elevators, assign the requests """
+
+        # Update the elevator state
+        els = resp.get("elevators", None)
+        if els is not None:
+            for el in els:
+                self.elevators[el.id_].update_state(el)
+
+        # Assign all requests
+        reqs = resp.get("requests", None)
+        if reqs is not None:
+            for req in reqs:
+                self.assign_request(req)
