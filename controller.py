@@ -84,3 +84,12 @@ class Controller(object):
         if reqs is not None:
             for req in reqs:
                 self.assign_request(req)
+
+    def get_commands(self):
+        """ Get the commands from all elevators """
+        commands = []
+        for el in self.elevators:
+            command = el.get_command()
+            if command is not None:
+                commands.append(command)
+        return commands
