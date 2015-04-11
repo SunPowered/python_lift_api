@@ -17,6 +17,7 @@ class ElevatorTest(unittest.TestCase):
         self.assertFalse(self.el.is_request_assigned(1, -1))
         self.assertFalse(self.el.has_requests())
         self.el.assign_request(1, -1)
+        self.assertEqual(self.el.get_request_by_floor(1), (1, -1))
         self.assertTrue(self.el.is_request_assigned(1, -1))
         self.assertTrue(self.el.has_requests())
         self.el.remove_request(1, -1)
@@ -97,6 +98,9 @@ class ElevatorTest(unittest.TestCase):
         self.el.button_pressed = []
         self.el.requests = [(5, 1)]
         self.check_command(speed=1, direction=1)
+
+        self.el.floor = 5
+        self.check_command(speed=0, direction=1)
 
 if __name__ == '__main__':
     unittest.main()

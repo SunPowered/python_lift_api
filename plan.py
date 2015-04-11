@@ -10,3 +10,10 @@ class BasePlan(object):
 
 class Training1(BasePlan):
     name = "training_1"
+
+
+class Training2(BasePlan):
+    name = "training_2"
+    n_els = 4
+    n_iters = 40
+    n_floors = 20

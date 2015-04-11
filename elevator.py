@@ -13,24 +13,37 @@ class Elevator(object):
         self.speed = 0
         self.direction = 0
         self.floor = 0
+        self.wait = False
 
     def __str__(self):
         return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
                                                                             self.speed, self.direction,
                                                                             self.button_pressed, self.requests)
 
-    def is_request_assigned(self, floor, direction):
-        return (floor, direction) in self.requests
+    def is_request_assigned(self, floor, direction=None):
+        if len(self.requests) == 0:
+            return False
+        if direction is None:
+            return floor in zip(*self.requests)[0]
+        else:
+            return (floor, direction) in self.requests
 
     def assign_request(self, floor, direction):
         """ Assign a request to the elevator """
         if not self.is_request_assigned(floor, direction):
             self.requests.append((floor, direction))
 
-    def remove_request(self, floor, direction):
+    def remove_request(self, floor, direction=None):
         """ Remove a request """
-        if self.is_request_assigned(floor, direction):
-            self.requests.remove((floor, direction))
+        if self.is_request_assigned(floor, direction=None):
+            req = self.get_request_by_floor(floor)
+            self.requests.remove(req)
+            self.wait = True
+
+    def get_request_by_floor(self, floor):
+        for req in self.requests:
+            if req[0] == floor:
+                return req
 
     def requests_along_direction(self, direction):
         """ Get a sorted list of requests along a given direction """
@@ -80,6 +93,8 @@ class Elevator(object):
     def direction_to(self, floor):
         """ Return the direction to a floor from current location """
         dist = self.distance_to(floor)
+        if dist == 0:
+            return 0
         return dist / abs(dist)
 
     def update_state(self, state):
@@ -99,6 +114,8 @@ class Elevator(object):
 
     def command(self, **kwargs):
         """ Format a command for this elevator """
+        self.speed = kwargs.get('speed')
+        self.direction = kwargs.get('direction')
         return Command(self.id_, **kwargs)
 
     def get_command(self):
@@ -107,18 +124,26 @@ class Elevator(object):
         # If no requests and not at home, send home
         if self.floor != 0 and not self.has_any_requests():
             return self.command(speed=1, direction=-1)
-        
+
         # If no requests, and at home, then do nothing
         if self.floor == 0 and not self.has_any_requests():
+            return None
+
+        # If waiting, then return None
+        if self.wait:
+            self.wait = False
+
             return None
 
         # If current floor is pressed, then stop
         if self.speed and self.is_button_pressed(self.floor):
             return self.command(speed=0, direction=self.direction)
 
-        # If current floor is requested, then stop and flip direction
+        # If current floor is requested, then stop and set proper direction
         if self.speed and self.is_request_assigned(self.floor):
-            return self.command(speed=0, direction=-1 * self.direction)
+            req = self.get_request_by_floor(self.floor)
+            self.remove_request(self.floor)
+            return self.command(speed=0, direction=req[1])
 
         # If stopped, then go towards next button
         if not self.speed and self.has_buttons():
@@ -128,3 +153,6 @@ class Elevator(object):
         if not self.speed and self.has_requests():
             direction = self.closest_request()
             return self.command(speed=1, direction=direction)
+
+        # All else considered, keep on keeping on
+        return self.command(speed=self.speed, direction=self.direction)
