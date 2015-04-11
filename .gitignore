@@ -2,4 +2,4 @@
 *.pyc
 
 # Config File
-config.py
+./config.py
