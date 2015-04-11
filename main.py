@@ -13,10 +13,10 @@ def print_commands(commands):
         print command
 
 
-def print_loop_counter(cnt, n_iters):
+def print_loop_counter(cnt, n_iter):
     print_every = 5
     if cnt % print_every == 0:
-        print "Iteration {}/{}".format(cnt, n_iters)
+        print "Iteration {}/{}".format(cnt, n_iter)
 
 
 def print_simulation_header(plan):
@@ -57,7 +57,7 @@ def main(options):
 
     while 1:
         loop_counter += 1
-        print_loop_counter(loop_counter, plan.n_iters)
+        print_loop_counter(loop_counter, plan.n_iter)
 
         if options.debug:
             controller.print_status()
