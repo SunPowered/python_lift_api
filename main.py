@@ -1,5 +1,6 @@
 """ main.py - The main loop and command caller """
 import inspect
+import time
 
 import plan as plans
 from controller import Controller
@@ -19,9 +20,10 @@ def print_loop_counter(cnt, n_iter):
         print "Iteration {}/{}".format(cnt, n_iter)
 
 
-def print_simulation_header(plan):
+def print_simulation_header(plan, options):
     print "Starting Boxlift Sim"
     print "Using plan: {}".format(plan.name)
+    print "Options: {}".format(options)
     print "---"
 
 
@@ -42,12 +44,14 @@ def main(options):
     if plan is None:
         raise TypeError("No plan exists for name: {}".format(options.plan))
 
-    print_simulation_header(plan)
+    api_verbose = options.verbose == 2
+
+    print_simulation_header(plan, options)
 
     controller = Controller(plan)
     api = BoxLift(cfg.username, plan.name, cfg.email, cfg.registration_id,
                   event_name=PYCON2015_EVENT_NAME, sandbox_mode=options.sandbox,
-                  verbose=options.verbose)
+                  verbose=api_verbose)
 
     resp = api.send_commands([])
     controller.update(resp)
@@ -59,11 +63,13 @@ def main(options):
         loop_counter += 1
         print_loop_counter(loop_counter, plan.n_iter)
 
-        if options.debug:
+        if options.verbose:
             controller.print_status()
             print_commands(commands)
 
-            uinput = raw_input(''' --- Continue ---''')
+        if options.debug:
+
+            uinput = raw_input('''\n--- Continue ---\n''')
             if uinput == 'd':
                 import pdb; pdb.set_trace()
 
@@ -75,13 +81,14 @@ def main(options):
 
         controller.update(resp)
         commands = controller.get_commands()
+        time.sleep(0.25)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='boxlift program - TvB')
     parser.add_argument('-d', '--debug', action='store_true', default=False, 
                         help='Enables debug mode, stops after each step')
-    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+    parser.add_argument('-v', '--verbose', action='count', default=False,
                         help='Enables API verbosity, logging API requests and responses')
     parser.add_argument('plan', default='Training1', help='The plan to use for the simulation')
     parser.add_argument('-s', '--sandbox', action='store_true', default=False,
