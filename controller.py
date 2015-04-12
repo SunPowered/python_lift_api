@@ -141,7 +141,7 @@ class Controller(object):
             # Find closest elevator that is not moving away
             el = self.find_closest_el_not_moving_away(req)
             if el is not None:
-                import pdb; pdb.set_trace()
+                # import pdb; pdb.set_trace()
                 elevator = self.elevators[el]
                 cur_elevator.remove_request(*req)
                 elevator.assign_request(*req)
