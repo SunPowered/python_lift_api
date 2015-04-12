@@ -82,7 +82,18 @@ class ControllerTest(unittest.TestCase):
         self.assertFalse(self.controller.is_request_assigned(req))
         self.controller.assign_request(req)
         self.assertTrue(self.controller.is_request_assigned(req))
+        self.controller.assign_request(req)
+        els = [el.id_ for el in self.controller.elevators if el.is_request_assigned(*req)]
+        self.assertEqual(len(els), 1, els)
 
+        req2 = (8, -1)
+        self.controller.assign_request(req2)
+        self.assertTrue(self.controller.is_request_assigned(req2))
+        self.controller.assign_request(req2)
+
+        els = [el.id_ for el in self.controller.elevators if el.is_request_assigned(*req2)]
+        self.assertEqual(len(els), 1, els)
+        
     def test_update(self):
 
         resp = {u'status': u'in_progress',
@@ -96,5 +107,26 @@ class ControllerTest(unittest.TestCase):
         self.controller.update(resp)
         self.assertEqual(self.controller.elevators[0].floor, 3)
 
+    def test_opposing_requests(self):
+        self.configure_elevator(0, speed=1, direction=1, floor=5, reqs=[(3, -1)])
+        self.assertEqual(self.controller.find_opposing_requests(), [((3, -1), 0)])
+
+    def test_find_closest_el_not_moving_away(self):
+        req = (3, -1)
+        self.configure_elevator(0, speed=1, direction=1, floor=5, reqs=[req])
+        self.configure_elevator(1, speed=1, direction=1, floor=2, reqs=[])
+        self.assertEqual(self.controller.find_closest_el_not_moving_away(req), 1)
+
+        self.configure_elevator(1, speed=1, direction=-1, floor=2, reqs=[])
+        self.assertIsNone(self.controller.find_closest_el_not_moving_away(req))
+
+    def test_shuffle_requests(self):
+        req = (3, -1)
+        self.configure_elevator(0, speed=1, direction=1, floor=5, reqs=[req])
+        self.configure_elevator(1, speed=1, direction=1, floor=2)
+        
+        self.controller.shuffle_requests()
+
+        self.assertTrue(self.controller.elevators[1].is_request_assigned(*req))
 if __name__ == '__main__':
     unittest.main()

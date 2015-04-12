@@ -1,4 +1,5 @@
 """ controller.py - A general elevator controller """
+import random
 
 from elevator import Elevator
 from plan import BasePlan
@@ -23,10 +24,11 @@ class Controller(object):
 
     def is_request_assigned(self, req):
         """ Check all elevators whether the request is assigned """
-        for el in self.elevators:
-            if el.is_request_assigned(*req):
-                return True
-        return False
+        return any([el.is_request_assigned(*req) for el in self.elevators])
+        # for el in self.elevators:
+        #     if el.is_request_assigned(*req):
+        #         return True
+        # return False
 
     def assign_request(self, req):
         """ Assign a request to one of the current elevators.  There are some rules
@@ -39,7 +41,7 @@ class Controller(object):
         if self.is_request_assigned(req):
             return
 
-        # Check whether request is on the way to another elevator
+        # Check whether request is on the way to an elevator
         elevator = self.find_elevator_by_req_otw(req)
 
         if elevator is not None:
@@ -126,3 +128,43 @@ class Controller(object):
             if command is not None:
                 commands.append(command)
         return commands
+
+    def shuffle_requests(self):
+        """ Find requests that are in the opposite direction of 
+            travel, and try to reassign them to a closer or stopped
+            elevator. """
+
+        opposing_requests = self.find_opposing_requests()
+
+        for req, cur_el in opposing_requests:
+            cur_elevator = self.elevators[cur_el]
+            # Find closest elevator that is not moving away
+            el = self.find_closest_el_not_moving_away(req)
+            if el is not None:
+                import pdb; pdb.set_trace()
+                elevator = self.elevators[el]
+                cur_elevator.remove_request(*req)
+                elevator.assign_request(*req)
+
+    def find_opposing_requests(self):
+        """ Get the opposing requests """
+        reqs = []
+        for el in self.elevators:
+            for req in el.requests:
+                dir_to_req = el.direction_to(req[0])
+                if dir_to_req in [0, el.direction] or el.direction == 0:
+                    continue
+                else:
+                    reqs.append((req, el.id_))
+        return reqs
+
+    def find_closest_el_not_moving_away(self, req):
+        """ Find the closest elevator not moving away from a request"""
+        all_els = []
+        for el in random.sample(self.elevators, len(self.elevators)):
+            if el.direction == 0 or el.direction_to(req[0]) == el.direction:
+                all_els.append((el.id_, el.distance_to(req[0])))
+        all_els.sort(key=lambda x: x[1])
+        if not all_els:
+            return None
+        return all_els[0][0]
