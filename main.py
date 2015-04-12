@@ -80,6 +80,7 @@ def main(options):
             break
 
         controller.update(resp)
+        controller.shuffle_requests()
         commands = controller.get_commands()
         time.sleep(0.25)
 
