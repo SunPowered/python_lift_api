@@ -17,11 +17,16 @@ class Elevator(object):
         self.direction = 0
         self.floor = 0
         self.n_floors = n_floors
+        self.dp = True
 
     def __str__(self):
         return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
                                                                             self.speed, self.direction,
                                                                             self.button_pressed, self.requests)
+
+    def print_cmd(self, cmd):
+        if self.dp:
+            print "CMD [{}] - {}".format(self.id_, cmd)
 
     def is_request_assigned(self, floor, direction=None):
         if len(self.requests) == 0:
@@ -148,12 +153,12 @@ class Elevator(object):
 
             # If there is a button press, go that way
             if self.has_buttons():
-                if dp: print "CMD: 1"
+                self.print_cmd(1)
                 return self.command(speed=1, direction=self.direction_to(self.button_pressed[0]))
             # If requests are available, go to them
             elif self.has_requests():
                 req = self.get_furthest_request()
-                if dp: print "CMD: 2"
+                self.print_cmd(2)
                 return self.command(speed=1, direction=self.direction_to(req[0]))
             else:
                 # Do nothing
@@ -166,6 +171,11 @@ class Elevator(object):
             closest_req = self.get_closest_request()
             has_request = self.is_request_assigned(self.floor, self.direction)
             req = None
+            direction = self.direction
+            if self.floor == 0:
+                direction = 1
+            if self.floor == self.n_floors:
+                direction = -1
             if has_request:
                 req = self.get_request_by_floor(self.floor)
             if has_button:
@@ -173,26 +183,26 @@ class Elevator(object):
                     direction = self.direction
                 elif closest_req is not None:
                     # Head to closest request
-                    if dp: print "CMD: 7"
+                    self.print_cmd(3)
                     direction=self.direction_to(closest_req[0])
                 else:
                     direction = -1 * self.direction
-                    if dp: print "CMD: 3"
+                    self.print_cmd(4)
                 return self.command(speed=0, direction=direction)
             elif has_request:
                 self.remove_request(*req)
-                if dp: print "CMD: 4"
+                self.print_cmd(5)
                 return self.command(speed=0, direction=self.direction)
             elif furthest_req is not None:
                 if furthest_req[0] == self.floor:
                     self.remove_request(*furthest_req)
-                    if dp: print "CMD: 5"
+                    self.print_cmd(6)
                     return self.command(speed=0, direction=furthest_req[1])
                 else:
-                    if dp: print "CMD: 6"
+                    self.print_cmd(7)
                     return self.command(speed=1, direction=self.direction_to(furthest_req[0]))
             elif not self.has_buttons() and not self.has_requests():
-                return self.command(speed=0, direction=self.direction)
+                return self.command(speed=0, direction=direction)
             else:
                 return self.command(speed=1, direction=self.direction)
 
