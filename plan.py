@@ -15,5 +15,5 @@ class Training1(BasePlan):
 class Training2(BasePlan):
     name = "training_2"
     n_els = 4
-    n_iters = 40
+    n_iter = 40
     n_floors = 20
