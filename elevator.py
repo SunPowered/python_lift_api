@@ -142,7 +142,7 @@ class Elevator(object):
         return Command(self.id_, **kwargs)
 
     def get_command(self):
-        dp = False  # I use this as a temp debug flag
+        dp = True  # I use this as a temp debug flag
         if not self.speed:
             # It's stopped!
 
@@ -174,7 +174,7 @@ class Elevator(object):
                 elif closest_req is not None:
                     # Head to closest request
                     if dp: print "CMD: 7"
-                    return self.command(speed=1, direction=self.direction_to(closest_req[0]))
+                    direction=self.direction_to(closest_req[0])
                 else:
                     direction = -1 * self.direction
                     if dp: print "CMD: 3"
