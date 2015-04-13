@@ -1,4 +1,5 @@
 """ main.py - The main loop and command caller """
+import sys
 import inspect
 import time
 
@@ -36,6 +37,23 @@ def print_simulation_results(resp):
         print "Holy Crap!  You won something!  Event code: {}".format(event_code)
 
 
+def send_commands(api, commands):
+    n_retry = 3
+    resp = api.send_commands(commands)
+    success = False
+    while not success and n_retry > 0:
+        if resp['status'] == 'error':
+            print "API Error: {}".format(resp['message'])
+            print "retrying: {}".format(n_retry)
+            n_retry -= 1
+        else:
+            success = True
+    if not success:
+        print "API Retry Exhausted.  I'm dying!"
+        sys.exit(1)
+    return resp
+
+
 def main(options):
     # check the plan argument
     plan = None
@@ -49,13 +67,13 @@ def main(options):
 
     print_simulation_header(plan, options)
 
-    controller = Controller(plan)
+    controller = Controller(plan, debug=options.verbose > 0)
     # api = BoxLift(cfg.username, plan.name, cfg.email, cfg.registration_id,
     #               event_name=PYCON2015_EVENT_NAME, sandbox_mode=options.sandbox,
     #               verbose=api_verbose)
     api = BoxLift(cfg.username, plan.name, cfg.email, sandbox_mode=options.sandbox,
                   verbose=api_verbose)
-    resp = api.send_commands([])
+    resp = send_commands(api, [])
     controller.update(resp)
     commands = controller.get_commands()
     # The loop
@@ -75,7 +93,7 @@ def main(options):
             if uinput == 'd':
                 import pdb; pdb.set_trace()
 
-        resp = api.send_commands(commands)
+        resp = send_commands(api, commands)
 
         if resp.get('status', '') == 'finished':
             print_simulation_results(resp)
