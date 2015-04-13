@@ -141,6 +141,7 @@ class Controller(object):
             # Find closest elevator that is not moving away
             el = self.find_closest_el_not_moving_away(req)
             if el is not None:
+                print "Shuffling req {} from el {} to {}".format(req, cur_el, el)
                 # import pdb; pdb.set_trace()
                 elevator = self.elevators[el]
                 cur_elevator.remove_request(*req)
