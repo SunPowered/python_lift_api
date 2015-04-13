@@ -8,19 +8,20 @@ from plan import BasePlan
 class Controller(object):
     """ Base controller object.  Handles the logic for assigning requests and issuing commands """
 
-    def __init__(self, plan, **kwargs):
+    def __init__(self, plan, debug=False):
         """ Takes a plan object ref and other kwargs to pass to the BoxLift API. """
 
         if not issubclass(plan, BasePlan) and not isinstance(plan, BasePlan):
             raise TypeError("plan argument must be a subclass of BasePlan")
         self.plan = plan
         self.elevators = []
-        self.init_elevators()
+        self.debug = debug
+        self.init_elevators(debug=self.debug)
 
-    def init_elevators(self):
+    def init_elevators(self, **kwargs):
         self.elevators = []
         for idx in range(self.plan.n_els):
-            self.elevators.append(Elevator(idx, self.plan.n_floors))
+            self.elevators.append(Elevator(idx, self.plan.n_floors, **kwargs))
 
     def is_request_assigned(self, req):
         """ Check all elevators whether the request is assigned """
@@ -141,7 +142,8 @@ class Controller(object):
             # Find closest elevator that is not moving away
             el = self.find_closest_el_not_moving_away(req)
             if el is not None:
-                print "Shuffling req {} from el {} to {}".format(req, cur_el, el)
+                if self.debug:
+                    print "Shuffling req {} from el {} to {}".format(req, cur_el, el)
                 # import pdb; pdb.set_trace()
                 elevator = self.elevators[el]
                 cur_elevator.remove_request(*req)

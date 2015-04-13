@@ -123,7 +123,8 @@ class BoxLift(object):
             command_list[command.id] = {'speed': command.speed, 'direction': command.direction}
         data = {'token': self.token, 'commands': command_list}
         state = self._post(self.building_url, data)
-        print("status: {}".format(state['status']))
+        if self.verbose:
+            print("status: {}".format(state['status']))
         if 'token' in state:
             self.token = state['token']
         if 'requests' not in state:

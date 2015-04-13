@@ -7,7 +7,7 @@ NO_REQUEST_STAY_PUT = True
 class Elevator(object):
     """ An object to store current states of various elevators and assigned requests. """
 
-    def __init__(self, id_, n_floors):
+    def __init__(self, id_, n_floors, debug=False):
         """ Main constructor. """
 
         self.id_ = id_
@@ -17,7 +17,7 @@ class Elevator(object):
         self.direction = 0
         self.floor = 0
         self.n_floors = n_floors
-        self.dp = True
+        self.dp = debug
 
     def __str__(self):
         return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
