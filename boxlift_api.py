@@ -40,7 +40,7 @@ class Command(object):
 class BoxLift(object):
     HOST = 'http://codelift.org'
 
-    def __init__(self, bot_name, plan, email, registration_id, event_name='', 
+    def __init__(self, bot_name, plan, email, registration_id='', event_name='', 
                  sandbox_mode=False, verbose=False):
         """An object that provides an interface to the Lift System.
 
@@ -83,11 +83,12 @@ class BoxLift(object):
             'username': bot_name,
             'email': email,
             'plan': plan,
-            'event_name': event_name,
-            'event_id': registration_id,
             'sandbox': sandbox_mode,
         }
-
+        if event_name != '':
+            initialization_data['event_name'] = event_name
+        if registration_id != '':
+            initialization_data['event_id'] = registration_id
         state = self._get_world_state(initialization_data)
         self.game_id = state['id']
         self.token = state['token']

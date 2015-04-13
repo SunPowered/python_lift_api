@@ -15,8 +15,9 @@ def print_commands(commands):
 
 
 def print_loop_counter(cnt, n_iter):
-    print_every = 5
+    print_every = 2
     if cnt % print_every == 0:
+        print
         print "Iteration {}/{}".format(cnt, n_iter)
 
 
@@ -49,10 +50,11 @@ def main(options):
     print_simulation_header(plan, options)
 
     controller = Controller(plan)
-    api = BoxLift(cfg.username, plan.name, cfg.email, cfg.registration_id,
-                  event_name=PYCON2015_EVENT_NAME, sandbox_mode=options.sandbox,
+    # api = BoxLift(cfg.username, plan.name, cfg.email, cfg.registration_id,
+    #               event_name=PYCON2015_EVENT_NAME, sandbox_mode=options.sandbox,
+    #               verbose=api_verbose)
+    api = BoxLift(cfg.username, plan.name, cfg.email, sandbox_mode=options.sandbox,
                   verbose=api_verbose)
-
     resp = api.send_commands([])
     controller.update(resp)
     commands = controller.get_commands()
