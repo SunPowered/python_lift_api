@@ -16,8 +16,8 @@ def print_commands(commands):
 
 def print_loop_counter(cnt, n_iter):
     print_every = 2
+    print
     if cnt % print_every == 0:
-        print
         print "Iteration {}/{}".format(cnt, n_iter)
 
 
