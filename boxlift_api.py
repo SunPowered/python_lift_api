@@ -122,7 +122,13 @@ class BoxLift(object):
         for command in commands:
             command_list[command.id] = {'speed': command.speed, 'direction': command.direction}
         data = {'token': self.token, 'commands': command_list}
-        state = self._post(self.building_url, data)
+        try:
+            state = self._post(self.building_url, data)
+        except urllib2.HTTPError as e:
+            state = {'status': 'error',
+                     'message': str(e)}
+            return state
+
         if self.verbose:
             print("status: {}".format(state['status']))
         if 'token' in state:
