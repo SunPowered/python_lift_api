@@ -1,4 +1,5 @@
 """ A simple file to store the various building plans """
+from strategy import BaseStrategy
 
 
 class BasePlan(object):
@@ -6,6 +7,7 @@ class BasePlan(object):
     n_els = 2      # The number of elevators
     n_iter = 30    # The number of iterations
     n_floors = 10  # The number of floors
+    strategy = BaseStrategy
 
 
 class Training1(BasePlan):

@@ -22,6 +22,7 @@ class Controller(object):
         self.elevators = []
         for idx in range(self.plan.n_els):
             self.elevators.append(Elevator(idx, self.plan.n_floors, **kwargs))
+        self.plan.strategy.init_elevators(self.elevators)
 
     def is_request_assigned(self, req):
         """ Check all elevators whether the request is assigned """
@@ -83,20 +84,11 @@ class Controller(object):
         """
         metrics = []
         for el in self.elevators:
-            metrics.append((el.id_, self.distance_metric(el, req)))
+            metrics.append((el.id_, self.plan.strategy.distance_metric(el, req)))
 
         # Sort and get the minimum value
         metrics.sort(key=lambda x: x[1])
         return metrics[0][0]
-
-    def distance_metric(self, el, req):
-        """ Use a metric to gauge the best elevator to select """
-        n_reqs = len(el.requests)
-        n_btns = len(el.button_pressed)
-
-        distance = abs(el.distance_to(req[0]))
-
-        return distance * (n_reqs + n_btns) ** 2
 
     def print_status(self):
         """ Print the current elevator status """

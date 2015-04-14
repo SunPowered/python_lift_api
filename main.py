@@ -4,6 +4,7 @@ import inspect
 import time
 
 import plan as plans
+import strategy as strategies
 from controller import Controller
 from boxlift_api import BoxLift, PYCON2015_EVENT_NAME
 from config import Config as cfg
@@ -25,6 +26,7 @@ def print_loop_counter(cnt, n_iter):
 def print_simulation_header(plan, options):
     print "Starting Boxlift Sim"
     print "Using plan: {}".format(plan.name)
+    print "Using strategy: {}".format(plan.strategy.name())
     print "Options: {}".format(options)
     print "---"
 
@@ -45,6 +47,7 @@ def send_commands(api, commands):
         if resp['status'] == 'error':
             print "API Error: {}".format(resp['message'])
             print "retrying: {}".format(n_retry)
+            time.sleep(1)
             n_retry -= 1
         else:
             success = True
@@ -60,8 +63,15 @@ def main(options):
     for clsname, clsobj in inspect.getmembers(plans):
         if clsname == options.plan:
             plan = clsobj
+            break
     if plan is None:
         raise TypeError("No plan exists for name: {}".format(options.plan))
+
+    # Check the strategy argument
+    if options.strategy is not None:
+        for clsname, clsobj in inspect.getmembers(strategies):
+            if clsname == options.strategy:
+                plan.strategy = clsobj
 
     api_verbose = options.verbose == 2
 
@@ -114,7 +124,9 @@ if __name__ == '__main__':
     parser.add_argument('plan', default='Training1', help='The plan to use for the simulation')
     parser.add_argument('-s', '--sandbox', action='store_true', default=False,
                         help='Enable sandbox mode.  Auto enabled with debug option')
-
+    parser.add_argument('-t', '--strategy', default=None, 
+                        help='Provide a strategy to the elevators, this will override any\
+ strategy existing in the building plan')
     options = parser.parse_args()
 
     if options.debug:
