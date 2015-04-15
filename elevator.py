@@ -14,10 +14,20 @@ class Elevator(object):
         self.requests = []
         self.button_pressed = []
         self.speed = 0
-        self.direction = 0
+        self.direction = 1
         self.floor = 0
         self.n_floors = n_floors
         self.dp = debug
+        self.home_floor = -1
+        self.cmd_states = {1: 'Stopped: Send to Button Press',
+                           2: 'Stopped: Send to Request',
+                           3: 'Stopped: Send Home',
+                           4: 'Stop at button: Move to closest request',
+                           5: 'Stop at button: Turn around',
+                           6: 'Stopping at Request',
+                           7: 'Heading to Furthest Request',
+                           8: 'Heading Home',
+                           9: 'Keep on Keeping On'}
 
     def __str__(self):
         return "Elevator[{}] - {}: spd: {} dir.: {} btn: {} rqs: {}".format(self.id_, self.floor,
@@ -26,7 +36,10 @@ class Elevator(object):
 
     def print_cmd(self, cmd):
         if self.dp:
-            print "CMD [{}] - {}".format(self.id_, cmd)
+            print "CMD [{}] - {}: {}".format(self.id_, cmd, self.cmd_states[cmd])
+
+    def print_info(self):
+        print "[{}] - n_floors: {} - home_floor: {}".format(self.id_, self.n_floors, self.home_floor)
 
     def is_request_assigned(self, floor, direction=None):
         if len(self.requests) == 0:
@@ -125,6 +138,10 @@ class Elevator(object):
                 return True
         return False
 
+    def is_at_home(self):
+        """ Is the elevator at it's home floor """
+        return self.floor == self.home_floor or self.home_floor == -1
+
     def update_state(self, state):
         """ A quick method to update the current state of things based on the REST values """
         id_ = state.get('id', None)
@@ -146,30 +163,42 @@ class Elevator(object):
         self.direction = kwargs.get('direction')
         return Command(self.id_, **kwargs)
 
+    def send_to_floor(self, floor):
+        """ Send a command to go to a floor """
+        return self.command(speed=1, direction=self.direction_to(floor))
+
+    def stop_and_point(self, direction):
+        """ Stop and orient towards a direction """
+        return self.command(speed=0, direction=direction)
+
     def get_command(self):
-        dp = True  # I use this as a temp debug flag
         if not self.speed:
             # It's stopped!
-
+            floor = None
             # If there is a button press, go that way
             if self.has_buttons():
                 self.print_cmd(1)
-                return self.command(speed=1, direction=self.direction_to(self.button_pressed[0]))
+                floor = self.button_pressed[0]
             # If requests are available, go to them
             elif self.has_requests():
                 req = self.get_furthest_request()
                 self.print_cmd(2)
-                return self.command(speed=1, direction=self.direction_to(req[0]))
-            else:
-                # Do nothing
-                return None
+                floor = req[0]
+            elif not self.is_at_home():
+                # Go home
+                self.print_cmd(3)
+                floor = self.home_floor
+            if floor is not None:
+                return self.send_to_floor(floor)
+
         else:
             # It's moving!
 
             has_button = self.is_button_pressed(self.floor)
             furthest_req = self.get_furthest_request()
-            closest_req = self.get_closest_request()
+            closest_request = self.get_closest_request()
             has_request = self.is_request_assigned(self.floor, self.direction)
+
             req = None
             direction = self.direction
             if self.floor == 0:
@@ -178,90 +207,49 @@ class Elevator(object):
                 direction = -1
             if has_request:
                 req = self.get_request_by_floor(self.floor)
+
+            do_stop = False
             if has_button:
                 if self.has_button_along_direction(self.direction):
+                    do_stop = True
                     direction = self.direction
-                elif closest_req is not None:
+                elif closest_request is not None:
                     # Head to closest request
-                    self.print_cmd(3)
-                    direction=self.direction_to(closest_req[0])
+                    self.print_cmd(4)
+                    direction = self.direction_to(closest_request[0])
+                    do_stop = True
                 else:
                     direction = -1 * self.direction
-                    self.print_cmd(4)
-                return self.command(speed=0, direction=direction)
+                    self.print_cmd(5)
+                    do_stop = True
             elif has_request:
                 self.remove_request(*req)
-                self.print_cmd(5)
-                return self.command(speed=0, direction=self.direction)
+                self.print_cmd(6)
+                do_stop = True
+            elif closest_request is not None:
+                if closest_request[0] == self.floor:
+                    self.remove_request(*closest_request)
+                    self.print_cmd(6)
+                    direction = closest_request[1]
+                    do_stop = True
             elif furthest_req is not None:
                 if furthest_req[0] == self.floor:
                     self.remove_request(*furthest_req)
                     self.print_cmd(6)
-                    return self.command(speed=0, direction=furthest_req[1])
+                    do_stop = True
+                    direction = furthest_req[1]
                 else:
                     self.print_cmd(7)
                     return self.command(speed=1, direction=self.direction_to(furthest_req[0]))
             elif not self.has_buttons() and not self.has_requests():
-                return self.command(speed=0, direction=direction)
+                #self.print_cmd(8)
+                if self.is_at_home():
+                    do_stop = True
+                else:
+                    direction = self.direction_to(self.home_floor)
+            
+            if do_stop:
+                return self.stop_and_point(direction)
             else:
+                self.print_cmd(9)
                 return self.command(speed=1, direction=self.direction)
-
-
-
-    def get_command_(self):
-        """ Determines what command to issue for itself """
-
-        req = None
-        if self.is_request_assigned(self.floor, direction=self.direction):
-            req = (self.floor, self.direction)
-
-        # If no requests, then stay put
-        if NO_REQUEST_STAY_PUT:
-            if not self.has_any_requests():
-                return None
-        else:
-            # If no requests and not at home, send home
-            if self.floor != 0 and not self.has_any_requests():
-                return self.command(speed=1, direction=-1)
-
-            # If no requests, and at home, then do nothing
-            if self.floor == 0 and not self.has_any_requests():
-                return None
-
-        # If current floor is pressed or requested in the dir of travel, then stop
-        if self.is_button_pressed(self.floor) or req is not None:
-            if req is not None:
-                self.remove_request(*req)
-            # if req is not None:
-            #     return self.command(speed=0, direction=req[1])
-            return self.command(speed=0, direction=self.direction)
-
-        # # If current floor is requested, then stop and set proper direction
-        # if req is not None:
-
-        #     if self.floor in [0, self.n_floors]:
-        #         self.remove_request(self.floor)
-        #         return self.command(speed=0, direction=req[1])
-        #     elif (req[1] != self.direction) and self.has_buttons():
-        #         return self.command(speed=0, direction=self.direction)
-        #     else:
-        #         self.remove_request(self.floor)
-        #         return self.command(speed=0, direction=req[1])
-
-        # if self.speed and self.is_button_pressed(self.floor):
-        #     if self.is_request_assigned(self.floor):
-        #         req = self.get_request_by_floor(self.floor)
-        #         return self.command(speed=0, direction=req[1])
-        #     return self.command(speed=0, direction=self.direction)
-
-        # If stopped, then go towards next button
-        if not self.speed and self.has_buttons():
-            return self.command(speed=1, direction=self.direction_to(self.button_pressed[0]))
-
-        # If stopped, and no buttons, go to nearest request
-        if not self.speed and self.has_requests():
-            direction = self.closest_request()
-            return self.command(speed=1, direction=direction)
-
-        # All else considered, keep on keeping on
-        return self.command(speed=self.speed, direction=self.direction)

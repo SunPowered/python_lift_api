@@ -27,4 +27,18 @@ class BaseStrategy(object):
 
         distance = abs(el.distance_to(req[0]))
 
-        return distance * (n_reqs + n_btns) ** 2
+        return distance * (1 + (n_reqs + n_btns) ** 2)
+
+
+class SplitHome(BaseStrategy):
+    """ Assign the elevators to different home positions, half
+        at the ground floor, half at the top """
+
+    @classmethod
+    def init_elevators(cls, elevators):
+        n_els = len(elevators)
+        for el in elevators:
+            if el.id_ < n_els / 2:
+                el.home_floor = 0
+            else:
+                el.home_floor = el.n_floors

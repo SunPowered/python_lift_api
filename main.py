@@ -17,8 +17,9 @@ def print_commands(commands):
 
 
 def print_loop_counter(cnt, n_iter):
-    print_every = 2
-    print
+    print_every = n_iter / 50
+    print_every = print_every or 2  # Default of 2 for short runs
+
     if cnt % print_every == 0:
         print "Iteration {}/{}".format(cnt, n_iter)
 
@@ -91,6 +92,8 @@ def main(options):
 
     while 1:
         loop_counter += 1
+        if options.verbose:
+            print  # Separate each verbose output
         print_loop_counter(loop_counter, plan.n_iter)
 
         if options.verbose:

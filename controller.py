@@ -23,6 +23,12 @@ class Controller(object):
         for idx in range(self.plan.n_els):
             self.elevators.append(Elevator(idx, self.plan.n_floors, **kwargs))
         self.plan.strategy.init_elevators(self.elevators)
+        if self.debug:
+            self.print_elevators_info()
+
+    def print_elevators_info(self):
+        for el in self.elevators:
+            el.print_info()
 
     def is_request_assigned(self, req):
         """ Check all elevators whether the request is assigned """
@@ -44,16 +50,21 @@ class Controller(object):
             return
 
         # Check whether request is on the way to an elevator
-        elevator = self.find_elevator_by_req_otw(req)
+        
+        #elevator = self.find_elevator_by_req_otw(req)
 
-        if elevator is not None:
-            # Assign it to this elevator
-            self.elevators[elevator].assign_request(*req)
-            return
-
-        # Find the minimum of distance*n_reqs**2 for the elevator stack
         elevator = self.find_elevator_by_req_metric(req)
         self.elevators[elevator].assign_request(*req)
+        return
+        
+        # if elevator is not None:
+        #     # Assign it to this elevator
+        #     self.elevators[elevator].assign_request(*req)
+        #     return
+
+        # # Find the minimum of distance*n_reqs**2 for the elevator stack
+        # elevator = self.find_elevator_by_req_metric(req)
+        # self.elevators[elevator].assign_request(*req)
 
     def find_elevator_by_req_otw(self, req):
         """  Check and see whether the request is already on the way of
@@ -62,21 +73,17 @@ class Controller(object):
         """
         req_floor, requests_dir = req
         els = []
-        for el in self.elevators:
-            if not el.has_buttons():
-                continue
-            if el.direction_to(req_floor) == el.direction:
-                distance = el.distance_to(req_floor)
-                els.append((el.id_, distance))
 
-        el_len = len(els)
-        if el_len == 0:
-            return None
-        elif el_len == 1:
-            return els[0][0]
-        else:
-            # Find shortest distance
-            return sorted(els, key=lambda x: x[1])[0][0]
+        # Find closest elevator that is on the way
+        distances = [(el, el.distance_to(req_floor)) for el in self.elevators]
+        distances.sort(key=lambda x: x[1])
+        for el in zip(*distances)[0]:
+            # If the elevator is stopped, then send it up
+            # If the request is on the way, we're ok
+            if not el.has_any_requests() or (el.direction_to(req_floor) == el.direction):
+                return el.id_
+
+        return None
 
     def find_elevator_by_req_metric(self, req):
         """ Get the minimum of a request metric to determine which

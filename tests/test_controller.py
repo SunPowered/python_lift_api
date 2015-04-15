@@ -42,8 +42,8 @@ class ControllerTest(unittest.TestCase):
     def test_find_el_otw(self):
         req = (5, 1)
 
-        # If all elevators are on the ground floor with no commands, None should be returned
-        self.assertIsNone(self.controller.find_elevator_by_req_otw(req))
+        # If all elevators are on the ground floor with no commands, one of them should be returned
+        self.assertIsNotNone(self.controller.find_elevator_by_req_otw(req))
 
         # Setup the environment - easy
         self.configure_elevator(1, floor=2, speed=1, direction=1, btns=[3, 7])
@@ -58,7 +58,7 @@ class ControllerTest(unittest.TestCase):
         self.controller.init_elevators()
         self.configure_elevator(0, floor=2, speed=1, direction=-1, btns=[4, 3])
 
-        self.assertIsNone(self.controller.find_elevator_by_req_otw(req))
+        self.assertEqual(self.controller.find_elevator_by_req_otw(req), 1)
 
         self.controller.init_elevators()
         self.configure_elevator(0, floor=2, speed=1, direction=1, btns=[4, 3])
